@@ -16,3 +16,41 @@ Dodatkowo:
 - Istnieje funkcjonalność znajomych by Adam mógł rozmawiać z Beatą, najpierw muszą stać się znajomymi.
 - Klient może pobrać listę swoich znajomych oraz informacje o tym czy są aktualnie zalogowani z serwera.
 
+---
+
+## Baza danych (JSON)
+
+```javascript
+users: [
+    user: {
+        login: string,
+        password: string,
+        loggedIn: boolean,
+        friends: string[],
+        messages: [
+            {
+                sender: string,
+                wasRead: boolean,
+                content: string,
+            },
+        ],
+    },
+]
+```
+
+## Serwer (Python)
+
+- odbiór loginu i hasła
+- sprawdzenie poprawności
+- odebranie wiadomości, wpisanie do bazy danych
+- sprawdzenie czy odbiorca istnieje, jest zalogowany, nadawca ma odbiorcę w znajomych
+- przekazanie wiadomości
+
+## Klient (C/C++)
+
+- wysłanie loginu i hasła
+- wysłanie nazwy odbiorcy i wiadomości
+- odbiór informacji od serwera
+- komenda dodawania do znajomych
+- wyświetlenie nieprzeczytanych wiadomości, oznaczenie ich jako przeczytane w bazie danych
+- wyświetlenie listy znajomych + ich statusy
