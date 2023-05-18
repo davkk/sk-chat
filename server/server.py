@@ -1,12 +1,39 @@
+# pyright: reportUnknownMemberType=false
 import socket
 import sys
 import threading
+from typing import Tuple
+
+from tinydb import Query, TinyDB
+
+# OK
+# USER_NOT_FOUND
 
 
 def handle_client(
-    client_socket: socket.SocketType,
-    address: socket.SocketType,
+    client_socket: socket.SocketType, address: Tuple[str, int], db: TinyDB
 ) -> None:
+    login = client_socket.recv(1024).decode()
+    client_socket.send("OK".encode())
+    print(f"[>] Received login ({login}) from {address}")
+
+    password = client_socket.recv(1024).decode()
+    client_socket.send("OK".encode())
+    print(f"[>] Received password from {address}")
+
+    User = Query()
+    users = db.table("users")
+
+    user = users.get(User.login == login and User.password == password)
+
+    if user is None:
+        client_socket.send("ERROR_USER".encode())
+        client_socket.close()
+        return
+
+    client_socket.send("OK".encode())
+    print(f"[%] Found user: {user}")
+
     while True:
         try:
             data = client_socket.recv(1024).decode()
@@ -40,6 +67,8 @@ def server(*, port: int) -> None:
             print("[!] Bind failed:", str(err))
             sys.exit(0)
 
+        db = TinyDB("database.json")
+
         while True:
             address = None
 
@@ -49,7 +78,7 @@ def server(*, port: int) -> None:
 
                 threading.Thread(
                     target=handle_client,
-                    args=(client_socket, address),
+                    args=(client_socket, address, db),
                 ).start()
 
             except socket.error as err:
