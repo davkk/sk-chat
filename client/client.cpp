@@ -19,14 +19,13 @@ void check_answer(char *answer, int client) {
 
     if (strcmp("OK", answer) != 0) {
         cout << "Błąd: " << answer << "\n";
-        close(client);
         exit(1);
     }
 }
 
-int main() {
-    int port = 4200;
-    string adresIP = "127.0.0.1";
+int main(int args, char *argv[]) {
+    int port = atoi(argv[2]);
+    string adresIP = argv[1];
     char answer[500] = {0};  // na odbierane wiadomości
 
     // tworzenie gniazda
