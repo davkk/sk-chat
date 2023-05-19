@@ -15,8 +15,16 @@ with TinyDB("database.json") as db:
             is_logged_in=False,
             friends=["alice"],
             unread_messages=[
-                "hello world",
-                "welcome to python",
+                """
+USER: alice
+MESSAGE:
+hello world
+                """,
+                """
+USER: alice
+MESSAGE:
+hey, pls respond...
+                """,
             ],
         )
     )

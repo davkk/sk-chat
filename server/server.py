@@ -55,11 +55,11 @@ def handle_client(
 
             match data:
                 case "SHOW_UNREAD":
-                    client_socket.send(
-                        str(
-                            len(user.get("unread_messages"))  # type: ignore
-                        ).encode()
-                    )
+                    unread_messages: list[str] = user.get("unread_messages")  # type: ignore
+                    client_socket.send(str(len(unread_messages)).encode())
+
+                    for message in unread_messages:
+                        client_socket.send(message.encode())
 
                 case "SEND_MESSAGE":
                     continue
