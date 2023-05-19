@@ -20,7 +20,7 @@ void read_answer(char *answer, int client) {
 }
 
 void *check_for_message(void *client_arg) {
-    char mess[500] = {0};  // na odbierane wiadomości
+    char mess[1024] = {0};  // na odbierane wiadomości
     int client = *(int *)client_arg;
     while (!read(client, mess, 1024)) {
         cout << "Masz wiadomość: "
@@ -75,13 +75,13 @@ int main(int args, char *argv[]) {
     cout << "Podaj login: ";
     cin >> login;
 
-    cout << "Podaj hasło: ";
-    cin >> password;
-
     //  wysłanie loginu, odbior info zwrotego i potwierdzenie okejności
     send(client, login, strlen(login), 0);
     read_answer(answer, client);
     check_ok(answer, client);
+
+    cout << "Podaj hasło: ";
+    cin >> password;
 
     // wysłanie hasła i potwierdzenie
     send(client, password, strlen(password), 0);
@@ -95,16 +95,11 @@ int main(int args, char *argv[]) {
     int choice;  // TODO: jakiś enum moze
     char new_friend_login[50], friend_login[50];
 
+    // pthread_t thread_message;
+    // pthread_create(&thread_message, NULL, check_for_message, (void
+    // *)&client); pthread_join(thread_message, NULL);
+
     do {
-        read_answer(answer, client);
-        cout << answer << "\n";
-
-        pthread_t thread_message;
-
-        pthread_create(&thread_message, NULL, check_for_message,
-                       (void *)&client);
-        pthread_join(thread_message, NULL);
-
         cout << "Wpisz co chcesz zrobić:"
              << "\n";
         cout << "1 - wyświetlić nieprzeczytane wiadomości"
@@ -126,7 +121,7 @@ int main(int args, char *argv[]) {
             case 1:
                 send(client, "SHOW_UNREAD", strlen("SHOW_UNREAD"), 0);
                 read_answer(answer, client);
-                cout << int(answer) << " wiadomości"
+                cout << atoi(answer) << " wiadomości"
                      << "\n";
 
             case 2:
