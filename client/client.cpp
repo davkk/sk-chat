@@ -6,25 +6,39 @@
 
 #include <fstream>
 #include <iostream>
-
+#include <stdexcept>
 using namespace std;
 
-// TODO: zrobić ładnie funkcję, obsługę błędow itp.
-//  void check_answer(char answer, int client) {
-//      if (read(client, answer, 1024) < 0) {
-//          cout << "Cos poszlo nie tak..."
-//               << "\n";
-//          close(client);
-//      }
-//      if (strcmp("OK", answer) == 0) {
-//          cout << answer << "\n";
-//      } else {
-//          cout << answer << "\n";
-//          cout << "Zamykam połączenie."
-//               << "\n";
-//          close(client);
-//      }
-//  }
+class Read_error {};
+class User_error {};
+
+void check_answer(char *answer, int client) {
+    if (read(client, answer, 1024) < 0) {
+        cout << "Zamykam połączenie."
+             << "\n";
+        close(client);
+        exit(1);
+    }
+    if (strcmp("ERROR_USER", answer)) {
+        cout << answer << "\n";
+
+        cout << "Logowanie nie powiodło się - błędne dane."
+             << "\n";
+        cout << "Zamykam połączenie."
+             << "\n";
+        close(client);
+        exit(1);
+    } else if (strcmp("OK", answer) != 0) {
+        cout << answer << "\n";
+
+        cout << "Zamykam połączenie."
+             << "\n";
+        close(client);
+        exit(1);
+    } else {
+        cout << answer << "\n";
+    }
+}
 
 int main() {
     int port = 4200;
@@ -64,54 +78,37 @@ int main() {
     cout << "Podaj hasło: ";
     cin >> password;
 
-    // TODO: FUNKCJA DO CZYTANIA !!!!!! Z rzucaniem błędow
-    //  wysłanie loginu
+    //  wysłanie loginu, odbior info zwrotego i potwierdzenie okejności
     send(client, login, strlen(login), 0);
-    // odbior info zwrotego i potwierdzenie okejności
-    if (read(client, answer, 1024) < 0) {
-        cout << "Cos poszlo nie tak..."
-             << "\n";
-        close(client);
-        return -1;
-    }
-    if (strcmp("OK", answer) == 0) {
-        cout << answer << "\n";
-    } else {
-        close(client);
-        return -1;
-    }
+    check_answer(answer, client);
 
     // wysłanie hasła i potwierdzenie
     send(client, password, strlen(password), 0);
-    if (read(client, answer, 1024) < 0) {
-        cout << "Cos poszlo nie tak..."
-             << "\n";
-        close(client);
-        return -1;
-    }
-    if (strcmp("OK", answer) == 0) {
-        cout << answer << "\n";
-    } else {
-        close(client);
-        return -1;
-    }
+    check_answer(answer, client);
 
     // sprawdzenie czy zalogowano
-    if (read(client, answer, 1024) < 0) {
-        cout << "Cos poszlo nie tak..."
+    check_answer(answer, client);
+
+    int choice;  // TODO: jakiś enum moze
+    do {
+        cout << "Wpisz co chcesz zrobić:"
              << "\n";
-        close(client);
-        return -1;
-    }
-    if (strcmp("OK", answer) == 0) {
-        cout << "Zalogowano."
+        cout << "1 - wyświetlić nieprzeczytane wiadomości"
              << "\n";
-    } else if (strcmp("ERROR_USER", answer)) {
-        cout << "Logowanie nie powiodło się - błędne dane."
+        cout << "2 - wysłać wiadomość"
              << "\n";
-        close(client);
-        return -1;
-    }
+        cout << "3 - dodać znajomego"
+             << "\n";
+        cout << "4 - wyświetlić znajomych"
+             << "\n";
+        cout << "5 - zakończyć połączenie"
+             << "\n";
+
+        do {
+            cin >> choice;
+        } while (choice > 5 || choice < 1);
+
+        } while (choice != 5);
 
     //  zakończenie połączenia
     close(client);
