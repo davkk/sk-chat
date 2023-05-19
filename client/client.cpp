@@ -123,6 +123,12 @@ int main(int args, char *argv[]) {
                 read_answer(answer, client);
                 cout << atoi(answer) << " wiadomości"
                      << "\n";
+                for (int i = 0; i < atoi(answer); i++) {
+                    read_answer(answer, client);
+                    send(client, "OK", strlen("OK"), 0);
+                    cout << answer << "\n";
+                }
+                break;
 
             case 2:
                 send(client, "SEND_MESSAGE", strlen("SEND_MESSAGE"), 0);
@@ -131,6 +137,7 @@ int main(int args, char *argv[]) {
                 send(client, friend_login, strlen(friend_login), 0);
                 read_answer(answer, client);
                 check_ok(answer, client);
+                break;
 
             case 3:
                 send(client, "ADD_FRIEND", strlen("SEE_MESS"), 0);
@@ -138,9 +145,11 @@ int main(int args, char *argv[]) {
                 cin >> new_friend_login;
                 read_answer(answer, client);
                 check_ok(answer, client);
+                break;
 
             case 4:
                 send(client, "DISPLAY_FRIENDS ", strlen("SEE_MESS"), 0);
+                break;
 
             case 5:
                 break;
