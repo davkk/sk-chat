@@ -9,9 +9,6 @@
 #include <stdexcept>
 using namespace std;
 
-class Read_error {};
-class User_error {};
-
 void check_answer(char *answer, int client) {
     if (read(client, answer, 1024) < 0) {
         cout << "Zamykam połączenie."
@@ -19,30 +16,17 @@ void check_answer(char *answer, int client) {
         close(client);
         exit(1);
     }
-    if (strcmp("ERROR_USER", answer)) {
-        cout << answer << "\n";
 
-        cout << "Logowanie nie powiodło się - błędne dane."
-             << "\n";
-        cout << "Zamykam połączenie."
-             << "\n";
+    if (strcmp("OK", answer) != 0) {
+        cout << "Błąd: " << answer << "\n";
         close(client);
         exit(1);
-    } else if (strcmp("OK", answer) != 0) {
-        cout << answer << "\n";
-
-        cout << "Zamykam połączenie."
-             << "\n";
-        close(client);
-        exit(1);
-    } else {
-        cout << answer << "\n";
     }
 }
 
 int main() {
     int port = 4200;
-    const char *adresIP = "127.0.0.1";
+    string adresIP = "127.0.0.1";
     char answer[500] = {0};  // na odbierane wiadomości
 
     // tworzenie gniazda
@@ -57,7 +41,7 @@ int main() {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
-    server_addr.sin_addr.s_addr = inet_addr(adresIP);
+    server_addr.sin_addr.s_addr = inet_addr(adresIP.c_str());
 
     // łączenie z serwerem
     int connection =
@@ -108,7 +92,7 @@ int main() {
             cin >> choice;
         } while (choice > 5 || choice < 1);
 
-        } while (choice != 5);
+    } while (choice != 5);
 
     //  zakończenie połączenia
     close(client);
