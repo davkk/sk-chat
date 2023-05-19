@@ -6,9 +6,6 @@ from typing import Tuple
 
 from tinydb import Query, TinyDB
 
-# OK
-# USER_NOT_FOUND
-
 
 def handle_client(
     client_socket: socket.SocketType, address: Tuple[str, int], db: TinyDB
@@ -23,16 +20,28 @@ def handle_client(
 
     User = Query()
     users = db.table("users")
+    find_user = (User.login == login) & (User.password == password)
 
-    user = users.get(User.login == login and User.password == password)
+    user = users.get(find_user)
 
     if user is None:
+        print(f"[!] Invalid login ({login}) or password from {address}")
         client_socket.send("ERROR_USER".encode())
+
+        print(f"[!] Closing connection from {address}")
         client_socket.close()
         return
 
     client_socket.send("OK".encode())
-    print(f"[%] Found user: {user}")
+    print("[%] Found user:", str(user.get("login")))  # type: ignore
+
+    client_ip, client_port = address
+    users.update(
+        dict(ip=client_ip, port=client_port, is_logged_in=True),
+        find_user,
+    )
+
+    print(users.all())
 
     while True:
         try:
@@ -40,7 +49,32 @@ def handle_client(
 
             if not data:
                 print(f"[-] Client {address} disconnected")
+                users.update(dict(is_logged_in=False), find_user)
+                print(users.all())
                 break
+
+            match data:
+                case "SHOW_UNREAD":
+                    client_socket.send(
+                        str(
+                            len(user.get("unread_messages"))  # type: ignore
+                        ).encode()
+                    )
+
+                case "SEND_MESSAGE":
+                    continue
+
+                case "ADD_FRIEND":
+                    continue
+
+                case "DISPLAY_FRIENDS":
+                    print(f"[>] Sending list of friends to {address}")
+                    client_socket.send(
+                        str(user.get("friends")).encode()  # type: ignore
+                    )
+
+                case _:
+                    continue
 
             print(f"[>] Received from {address}: {data}")
 

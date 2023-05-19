@@ -11,9 +11,13 @@ with TinyDB("database.json") as db:
             login="david",
             password="david",
             ip="",
-            port="",
+            port=0,
+            is_logged_in=False,
             friends=["alice"],
-            unreadMessages=[],
+            unread_messages=[
+                "hello world",
+                "welcome to python",
+            ],
         )
     )
     users.insert(
@@ -21,8 +25,9 @@ with TinyDB("database.json") as db:
             login="alice",
             password="alice",
             ip="",
-            port="",
+            port=0,
+            is_logged_in=False,
             friends=["bob"],
-            unreadMessages=[],
+            unread_messages=[],
         )
     )

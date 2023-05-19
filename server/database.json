@@ -1,1 +1,1 @@
-{"users": {"1": {"username": "david", "password": "david"}, "2": {"username": "alice", "password": "alice"}}}
+{"users": {"1": {"login": "david", "password": "david", "ip": "127.0.0.1", "port": 39060, "is_logged_in": false, "friends": ["alice"], "unread_messages": ["hello world", "welcome to python"]}, "2": {"login": "alice", "password": "alice", "ip": "127.0.0.1", "port": 54256, "is_logged_in": false, "friends": ["bob"], "unread_messages": []}}}
