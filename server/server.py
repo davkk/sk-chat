@@ -10,11 +10,11 @@ from tinydb import Query, TinyDB
 def handle_client(
     client_socket: socket.SocketType, address: Tuple[str, int], db: TinyDB
 ) -> None:
-    login = client_socket.recv(1024).decode()
+    login = client_socket.recv(50).decode()
     client_socket.send("OK".encode())
     print(f"[>] Received login ({login}) from {address}")
 
-    password = client_socket.recv(1024).decode()
+    password = client_socket.recv(50).decode()
     client_socket.send("OK".encode())
     print(f"[>] Received password from {address}")
 
@@ -41,8 +41,6 @@ def handle_client(
         find_user,
     )
 
-    print(users.all())
-
     while True:
         try:
             data = client_socket.recv(1024).decode()
@@ -50,16 +48,22 @@ def handle_client(
             if not data:
                 print(f"[-] Client {address} disconnected")
                 users.update(dict(is_logged_in=False), find_user)
-                print(users.all())
                 break
+
+            print(f"[>] Received from {address}: {data}")
 
             match data:
                 case "SHOW_UNREAD":
                     unread_messages: list[str] = user.get("unread_messages")  # type: ignore
                     client_socket.send(str(len(unread_messages)).encode())
+                    if client_socket.recv(16).decode() != "OK":
+                        break
 
                     for message in unread_messages:
+                        print(message)
                         client_socket.send(message.encode())
+                        if client_socket.recv(16).decode() != "OK":
+                            break
 
                 case "SEND_MESSAGE":
                     continue
@@ -75,8 +79,6 @@ def handle_client(
 
                 case _:
                     continue
-
-            print(f"[>] Received from {address}: {data}")
 
         except UnicodeDecodeError:
             print(f"[!] Invalid data received from {address}")
