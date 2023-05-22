@@ -25,7 +25,17 @@ with TinyDB("database.json") as db:
             ip="",
             port=0,
             is_logged_in=False,
-            friends=["bob"],
+            friends=["david"],
+        )
+    )
+    users.insert(
+        dict(
+            login="bob",
+            password="bob",
+            ip="",
+            port=0,
+            is_logged_in=False,
+            friends=["david", "alice"],
         )
     )
 
