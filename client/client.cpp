@@ -100,7 +100,7 @@ int main(int args, char *argv[]) {
             "\nWpisz co chcesz zrobić:\n"
             "1 - wyświetlić nieprzeczytane wiadomości\n"
             "2 - wysłać wiadomość\n"
-            "3 - zakończyć połączenie\n"
+            "3 - wylogować się\n"
             "> ");
 
         do {
@@ -109,19 +109,18 @@ int main(int args, char *argv[]) {
 
         switch (choice) {
             case 1: {
-                send(sock, "SHOW_UNREAD", strlen("SHOW_UNREAD"), 0);
+                send(sock, "SHOW_FRIENDS", strlen("SHOW_FRIENDS"), 0);
 
                 char num_messages[50];
                 read_answer(num_messages, sock);
                 send(sock, "OK", strlen("OK"), 0);
-                printf("Liczba nieprzeczytanych wiadomości: %s\n",
-                       num_messages);
 
                 for (int i = 0; i < atoi(num_messages); i++) {
                     read_answer(answer, sock);
                     printf("--- %d ---\n", i + 1);
                     printf("%s\n", answer);
                     send(sock, "OK", strlen("OK"), 0);
+                    bzero(answer, sizeof(answer));
                 }
 
                 break;
@@ -129,19 +128,21 @@ int main(int args, char *argv[]) {
 
             case 2: {
                 send(sock, "SEND_MESSAGE", strlen("SEND_MESSAGE"), 0);
-                cout << "Podaj komu chcesz wysłać wiadomość: ";
+                cout << "Podaj numer znajomego, ktoremu chcesz wysłać "
+                        "wiadomość: ";
                 cin >> friend_login;
+                // TODO: sprawdzenie czy w ogle jest tyle znajomych
                 send(sock, friend_login, strlen(friend_login), 0);
                 read_answer(answer, sock);
                 check_ok(answer, sock);
+                cout << "Podaj wiadomość:";
                 break;
             }
 
-            case 5:
+            case 3:
                 break;
         }
-
-    } while (choice != 5);
+    } while (choice != 3);
 
     //  zakończenie połączenia
     close(sock);
