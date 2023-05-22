@@ -109,7 +109,7 @@ def handle_client(
                         continue
 
                     friends_list: list[str] = current_user.get("friends")  # type: ignore
-                    if friend not in friends_list:
+                    if friend.get("login") not in friends_list:
                         client_socket.send("ERROR_USER_NOT_FRIEND".encode())
                         continue
 
@@ -150,7 +150,7 @@ def handle_client(
                         continue
 
                     friends_list: list[str] = current_user.get("friends")  # type: ignore
-                    if receiver not in friends_list:
+                    if receiver.get("login") not in friends_list:
                         client_socket.send("ERROR_USER_NOT_FRIEND".encode())
                         continue
 
