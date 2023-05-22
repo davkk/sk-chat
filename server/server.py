@@ -20,11 +20,11 @@ def handle_client(
 
     User = Query()
     users = db.table("users")
-    find_user = (User.login == login) & (User.password == password)
+    user_filter = (User.login == login) & (User.password == password)
 
-    user = users.get(find_user)
+    current_user = users.get(user_filter)
 
-    if user is None:
+    if current_user is None:
         print(f"[!] Invalid login ({login}) or password from {address}")
         client_socket.send("ERROR_USER".encode())
 
@@ -33,12 +33,12 @@ def handle_client(
         return
 
     client_socket.send("OK".encode())
-    print("[%] Found user:", str(user.get("login")))  # type: ignore
+    print("[%] Found user:", str(current_user.get("login")))  # type: ignore
 
     client_ip, client_port = address
     users.update(
         dict(ip=client_ip, port=client_port, is_logged_in=True),
-        find_user,
+        user_filter,
     )
 
     while True:
@@ -47,20 +47,45 @@ def handle_client(
 
             if not data:
                 print(f"[-] Client {address} disconnected")
-                users.update(dict(is_logged_in=False), find_user)
+                users.update(dict(is_logged_in=False), user_filter)
                 break
 
             print(f"[>] Received from {address}: {data}")
 
             match data:
-                case "SHOW_UNREAD":
-                    unread_messages: list[str] = user.get("unread_messages")  # type: ignore
+                case "SHOW_FRIENDS":
+                    Message = Query()
+                    messages = db.table("messages")
+                    friends: list[str] = current_user.get("friends")  # type: ignore
+
+                    for friend in friends:
+                        friend_messages = messages.search(
+                            (Message.sender == friend)
+                            & (Message.receiver == current_user.get("login"))
+                        )
+
+                        print(friend_messages)
+
+                        if len(friend_messages) == 0:
+                            client_socket.send(
+                                f"{friend}: NO MESSAGES".encode()
+                            )
+                            if client_socket.recv(16).decode() != "OK":
+                                break
+                        else:
+                            last_message: str = friend_messages[-1].get("message")  # type: ignore
+                            client_socket.send(
+                                f"{friend}: {f'{last_message[:10]}...' if len(last_message) > 10 else last_message}".encode()
+                            )
+                            if client_socket.recv(16).decode() != "OK":
+                                break
+
+                    unread_messages: list[str] = current_user.get("unread_messages")  # type: ignore
                     client_socket.send(str(len(unread_messages)).encode())
                     if client_socket.recv(16).decode() != "OK":
                         break
 
                     for message in unread_messages:
-                        print(message)
                         client_socket.send(message.encode())
                         if client_socket.recv(16).decode() != "OK":
                             break
@@ -74,7 +99,7 @@ def handle_client(
                 case "DISPLAY_FRIENDS":
                     print(f"[>] Sending list of friends to {address}")
                     client_socket.send(
-                        str(user.get("friends")).encode()  # type: ignore
+                        str(current_user.get("friends")).encode()  # type: ignore
                     )
 
                 case _:

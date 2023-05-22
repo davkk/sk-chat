@@ -1,4 +1,6 @@
 # pyright: reportUnknownMemberType=false
+import time
+
 from tinydb import TinyDB
 
 with TinyDB("database.json") as db:
@@ -14,10 +16,6 @@ with TinyDB("database.json") as db:
             port=0,
             is_logged_in=False,
             friends=["alice"],
-            unread_messages=[
-                "This is a message from alice",
-                "Hello from alice",
-            ],
         )
     )
     users.insert(
@@ -28,6 +26,43 @@ with TinyDB("database.json") as db:
             port=0,
             is_logged_in=False,
             friends=["bob"],
-            unread_messages=[],
         )
     )
+
+    messages = db.table("messages")
+    messages.insert(
+        dict(
+            time=str(time.time_ns()),
+            sender="david",
+            receiver="alice",
+            message="Hello from david",
+        )
+    )
+    messages.insert(
+        dict(
+            time=str(time.time_ns()),
+            sender="alice",
+            receiver="david",
+            message="Hi from alice",
+        )
+    )
+    messages.insert(
+        dict(
+            time=str(time.time_ns()),
+            sender="alice",
+            receiver="david",
+            message="What's up?",
+        )
+    )
+    messages.insert(
+        dict(
+            time=str(time.time_ns()),
+            sender="david",
+            receiver="alice",
+            message="Not much",
+        )
+    )
+
+    print("Database initialized")
+    print(f"Users: {users.all()}")
+    print(f"Messages: {messages.all()}")
