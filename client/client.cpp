@@ -147,11 +147,15 @@ int main(int args, char *argv[]) {
 
             case 3: {
                 send(sock, "SEND_MESSAGE", strlen("SEND_MESSAGE"), 0);
+
                 printf(
                     "Podaj znajomego, ktoremu chcesz wysłać "
                     "wiadomość:\n"
                     "> ");
+
+                char friend_login[50];
                 cin >> friend_login;
+
                 send(sock, friend_login, strlen(friend_login), 0);
                 read_answer(answer, sock);
                 if (strcmp("OK", answer) != 0) {
@@ -159,10 +163,14 @@ int main(int args, char *argv[]) {
                     bzero(answer, sizeof(answer));
                     break;
                 }
+
                 printf(
                     "Podaj wiadomość:\n"
                     "> ");
+
+                char message[1024];
                 cin >> message;
+
                 send(sock, message, strlen(message), 0);
                 read_answer(answer, sock);
                 if (strcmp("OK", answer) != 0) {
@@ -170,6 +178,7 @@ int main(int args, char *argv[]) {
                     printf("Nie wysyłaj pustych wiadomości :(\n");
                     bzero(answer, sizeof(answer));
                 }
+
                 break;
             }
 
