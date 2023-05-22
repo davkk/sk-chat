@@ -28,11 +28,13 @@ void check_ok(char *answer, int client) {
 }
 
 int main(int args, char *argv[]) {
+    // todo: zabezpieczyć nie podanie argumentow
+
     int port = atoi(argv[2]);
     string ip_addr = argv[1];
     char answer[500] = {0};  // na odbierane wiadomości
 
-    // tworzenie gniazda
+    //  tworzenie gniazda
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1) {
         perror("Błąd tworzenia gniazda");
@@ -87,24 +89,25 @@ int main(int args, char *argv[]) {
         printf(
             "\nWpisz co chcesz zrobić:\n"
             "1 - wyświetlić listę znajomych\n"
-            "2 - wysłać wiadomość\n"
-            "3 - wylogować się\n"
+            "2 - wyświetlić wiadomości od znajomego\n"
+            "3 - wysłać wiadomość\n"
+            "4 - wylogować się\n"
             "> ");
 
         // todo - sprawdzić czy to liczba
         do {
             cin >> choice;
-        } while (choice > 3 || choice < 1);
+        } while (choice > 4 || choice < 1);
 
         switch (choice) {
             case 1: {
                 send(sock, "SHOW_FRIENDS", strlen("SHOW_FRIENDS"), 0);
 
-                char num_messages[50];
-                read_answer(num_messages, sock);
+                char num_friends[50];
+                read_answer(num_friends, sock);
                 send(sock, "OK", strlen("OK"), 0);
 
-                for (int i = 0; i < atoi(num_messages); i++) {
+                for (int i = 0; i < atoi(num_friends); i++) {
                     read_answer(answer, sock);
                     printf("--- %d ---\n", i + 1);
                     printf("%s\n", answer);
@@ -116,6 +119,33 @@ int main(int args, char *argv[]) {
             }
 
             case 2: {
+                send(sock, "SHOW_MESSAGES", strlen("SHOW_MESSAGES"), 0);
+                printf(
+                    "Podaj znajomego, ktorego wiadomości chesz zobaczyć:\n"
+                    "> ");
+                cin >> friend_login;
+                send(sock, friend_login, strlen(friend_login), 0);
+                read_answer(answer, sock);
+
+                if (strcmp("OK", answer) != 0) {
+                    fprintf(stderr, "Błąd: %s\n", answer);
+                    bzero(answer, sizeof(answer));
+                    break;
+                }
+                char num_messages[50];
+                read_answer(num_messages, sock);
+                send(sock, "OK", strlen("OK"), 0);
+
+                for (int i = 0; i < atoi(num_messages); i++) {
+                    read_answer(answer, sock);
+                    printf("%s\n", answer);
+                    send(sock, "OK", strlen("OK"), 0);
+                    bzero(answer, sizeof(answer));
+                }
+                break;
+            }
+
+            case 3: {
                 send(sock, "SEND_MESSAGE", strlen("SEND_MESSAGE"), 0);
                 printf(
                     "Podaj znajomego, ktoremu chcesz wysłać "
@@ -143,11 +173,11 @@ int main(int args, char *argv[]) {
                 break;
             }
 
-            case 3:
-                printf("Wylogowuję\n");
+            case 4:
+                printf("Wylogowuję...\n");
                 break;
         }
-    } while (choice != 3);
+    } while (choice != 4);
 
     //  zakończenie połączenia
     close(sock);
