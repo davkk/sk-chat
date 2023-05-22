@@ -61,6 +61,9 @@ def handle_client(
                         for friend in current_user.get("friends")  # type: ignore
                     ]
 
+                    client_socket.send(f"{len(friends)}".encode())
+                    assert client_socket.recv(16).decode() == "OK"
+
                     for friend in friends:
                         if friend is None:
                             continue
@@ -95,17 +98,12 @@ def handle_client(
                             )
                             assert client_socket.recv(16).decode() == "OK"
 
+
                 case "SEND_MESSAGE":
                     continue
 
                 case "ADD_FRIEND":
                     continue
-
-                case "DISPLAY_FRIENDS":
-                    print(f"[>] Sending list of friends to {address}")
-                    client_socket.send(
-                        str(current_user.get("friends")).encode()  # type: ignore
-                    )
 
                 case _:
                     continue
