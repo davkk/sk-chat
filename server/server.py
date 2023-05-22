@@ -42,6 +42,9 @@ def handle_client(
         user_filter,
     )
 
+    Message = Query()
+    messages = db.table("messages")
+
     while True:
         try:
             data = client_socket.recv(1024).decode()
@@ -55,8 +58,6 @@ def handle_client(
 
             match data:
                 case "SHOW_FRIENDS":
-                    Message = Query()
-                    messages = db.table("messages")
                     friends = [
                         users.get(User.login == friend)
                         for friend in current_user.get("friends")  # type: ignore
@@ -99,10 +100,47 @@ def handle_client(
                             )
                             assert client_socket.recv(16).decode() == "OK"
 
+                case "SHOW_MESSAGES":
+                    friend = client_socket.recv(50).decode()
+                    friend = users.get(User.login == friend)
+                    if friend is None:
+                        client_socket.send("ERROR_USER_NOT_FOUND".encode())
+                        continue
+
+                    client_socket.send("OK".encode())
+
+                    conversation = sorted(
+                        messages.search(
+                            (
+                                (Message.sender == current_user.get("login"))
+                                & (Message.receiver == friend.get("login"))
+                            )
+                            | (
+                                (Message.sender == friend.get("login"))
+                                & (
+                                    Message.receiver
+                                    == current_user.get("login")
+                                )
+                            )
+                        ),
+                        key=lambda message: int(message.get("time")),  # type: ignore
+                    )
+
+                    client_socket.send(f"{len(conversation)}".encode())
+                    assert client_socket.recv(16).decode() == "OK"
+
+                    for message in conversation:
+                        client_socket.send(
+                            f"{message.get('sender')}: {message.get('message')}".encode()
+                        )
+                        assert client_socket.recv(16).decode() == "OK"
+
                 case "SEND_MESSAGE":
                     receiver = client_socket.recv(50).decode()
-                    if receiver is None or receiver == "":
-                        client_socket.send("BAD_REQUEST".encode())
+                    receiver = users.get(User.login == receiver)
+
+                    if receiver is None:
+                        client_socket.send("ERROR_USER_NOT_FOUND".encode())
                         continue
 
                     friends_list: list[str] = current_user.get("friends")  # type: ignore
@@ -113,13 +151,17 @@ def handle_client(
                     client_socket.send("OK".encode())
                     message = client_socket.recv(1024).decode()
 
-                    messages = db.table("messages")
+                    if message == "":
+                        client_socket.send("ERROR_MESSAGE_EMPTY".encode())
+                        continue
+
                     messages.insert(
                         dict(
                             time=str(time.time_ns()),
                             sender=current_user.get("login"),
-                            receiver=receiver,
+                            receiver=receiver.get("login"),
                             message=message,
+                            read=False,
                         )
                     )
 
