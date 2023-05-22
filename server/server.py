@@ -103,8 +103,14 @@ def handle_client(
                 case "SHOW_MESSAGES":
                     friend = client_socket.recv(50).decode()
                     friend = users.get(User.login == friend)
+
                     if friend is None:
                         client_socket.send("ERROR_USER_NOT_FOUND".encode())
+                        continue
+
+                    friends_list: list[str] = current_user.get("friends")  # type: ignore
+                    if friend not in friends_list:
+                        client_socket.send("ERROR_USER_NOT_FRIEND".encode())
                         continue
 
                     client_socket.send("OK".encode())
