@@ -64,8 +64,6 @@ def handle_client(
                             & (Message.receiver == current_user.get("login"))
                         )
 
-                        print(friend_messages)
-
                         if len(friend_messages) == 0:
                             client_socket.send(
                                 f"{friend}: NO MESSAGES".encode()
@@ -79,16 +77,6 @@ def handle_client(
                             )
                             if client_socket.recv(16).decode() != "OK":
                                 break
-
-                    unread_messages: list[str] = current_user.get("unread_messages")  # type: ignore
-                    client_socket.send(str(len(unread_messages)).encode())
-                    if client_socket.recv(16).decode() != "OK":
-                        break
-
-                    for message in unread_messages:
-                        client_socket.send(message.encode())
-                        if client_socket.recv(16).decode() != "OK":
-                            break
 
                 case "SEND_MESSAGE":
                     continue
