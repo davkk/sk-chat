@@ -19,19 +19,6 @@ void read_answer(char *answer, int client) {
     }
 }
 
-void *check_for_message(void *client_arg) {
-    char mess[1024] = {0};  // na odbierane wiadomości
-    int client = *(int *)client_arg;
-    while (!read(client, mess, 1024)) {
-        cout << "Masz wiadomość: "
-             << "\n";
-        cout << mess << "\n";
-    }
-    pthread_exit(NULL);
-    close(client);
-    exit(1);
-}
-
 void check_ok(char *answer, int client) {
     if (strcmp("OK", answer) != 0) {
         fprintf(stderr, "Błąd: %s\n", answer);
@@ -94,15 +81,17 @@ int main(int args, char *argv[]) {
 
     int choice;  // TODO: jakiś enum moze
     char new_friend_login[50], friend_login[50];
+    char message[500] = {0};  // na wysyłane wiadomości
 
     do {
         printf(
             "\nWpisz co chcesz zrobić:\n"
-            "1 - wyświetlić nieprzeczytane wiadomości\n"
+            "1 - wyświetlić listę znajomych\n"
             "2 - wysłać wiadomość\n"
             "3 - wylogować się\n"
             "> ");
 
+        // todo - sprawdzić czy to liczba
         do {
             cin >> choice;
         } while (choice > 3 || choice < 1);
@@ -128,18 +117,34 @@ int main(int args, char *argv[]) {
 
             case 2: {
                 send(sock, "SEND_MESSAGE", strlen("SEND_MESSAGE"), 0);
-                cout << "Podaj numer znajomego, ktoremu chcesz wysłać "
-                        "wiadomość: ";
+                printf(
+                    "Podaj znajomego, ktoremu chcesz wysłać "
+                    "wiadomość:\n"
+                    "> ");
                 cin >> friend_login;
-                // TODO: sprawdzenie czy w ogle jest tyle znajomych
                 send(sock, friend_login, strlen(friend_login), 0);
                 read_answer(answer, sock);
-                check_ok(answer, sock);
-                cout << "Podaj wiadomość:";
+                if (strcmp("OK", answer) != 0) {
+                    fprintf(stderr, "Błąd: %s\n", answer);
+                    bzero(answer, sizeof(answer));
+                    break;
+                }
+                printf(
+                    "Podaj wiadomość:\n"
+                    "> ");
+                cin >> message;
+                send(sock, message, strlen(message), 0);
+                read_answer(answer, sock);
+                if (strcmp("OK", answer) != 0) {
+                    fprintf(stderr, "Błąd: %s\n", answer);
+                    printf("Nie wysyłaj pustych wiadomości :(\n");
+                    bzero(answer, sizeof(answer));
+                }
                 break;
             }
 
             case 3:
+                printf("Wylogowuję\n");
                 break;
         }
     } while (choice != 3);
