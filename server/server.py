@@ -56,27 +56,44 @@ def handle_client(
                 case "SHOW_FRIENDS":
                     Message = Query()
                     messages = db.table("messages")
-                    friends: list[str] = current_user.get("friends")  # type: ignore
+                    friends = [
+                        users.get(User.login == friend)
+                        for friend in current_user.get("friends")  # type: ignore
+                    ]
 
                     for friend in friends:
+                        if friend is None:
+                            continue
+
                         friend_messages = messages.search(
-                            (Message.sender == friend)
+                            (Message.sender == friend.get("login"))
                             & (Message.receiver == current_user.get("login"))
                         )
 
                         if len(friend_messages) == 0:
                             client_socket.send(
-                                f"{friend}: NO MESSAGES".encode()
+                                f"{friend.get('login')}: NO MESSAGES".encode()
                             )
-                            if client_socket.recv(16).decode() != "OK":
-                                break
+                            assert client_socket.recv(16).decode() == "OK"
+
                         else:
-                            last_message: str = friend_messages[-1].get("message")  # type: ignore
-                            client_socket.send(
-                                f"{friend}: {f'{last_message[:10]}...' if len(last_message) > 10 else last_message}".encode()
+                            friend = (
+                                f"*{friend.get('login')}"
+                                if friend.get("is_logged_in")  # type: ignore
+                                else friend.get("login")
                             )
-                            if client_socket.recv(16).decode() != "OK":
-                                break
+
+                            last_message: str = friend_messages[-1].get("message")  # type: ignore
+
+                            last_message: str = (
+                                f"{last_message[:10]}..."
+                                if len(last_message) > 10
+                                else last_message
+                            )
+                            client_socket.send(
+                                f"{friend}: {last_message}".encode()
+                            )
+                            assert client_socket.recv(16).decode() == "OK"
 
                 case "SEND_MESSAGE":
                     continue
@@ -97,7 +114,12 @@ def handle_client(
             print(f"[!] Invalid data received from {address}")
             continue
 
+        except AssertionError:
+            print(f"[!] Invalid data received from {address}")
+            continue
+
     client_socket.close()
+    sys.exit(0)
 
 
 def server(*, port: int) -> None:
