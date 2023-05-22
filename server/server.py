@@ -2,6 +2,7 @@
 import socket
 import sys
 import threading
+import time
 from typing import Tuple
 
 from tinydb import Query, TinyDB
@@ -73,34 +74,56 @@ def handle_client(
                             & (Message.receiver == current_user.get("login"))
                         )
 
+                        friend = (
+                            f"*{friend.get('login')}"
+                            if friend.get("is_logged_in")  # type: ignore
+                            else friend.get("login")
+                        )
+
                         if len(friend_messages) == 0:
                             client_socket.send(
-                                f"{friend.get('login')}: NO MESSAGES".encode()
+                                f"{friend}: -- NO MESSAGES".encode()
                             )
                             assert client_socket.recv(16).decode() == "OK"
 
                         else:
-                            friend = (
-                                f"*{friend.get('login')}"
-                                if friend.get("is_logged_in")  # type: ignore
-                                else friend.get("login")
-                            )
-
                             last_message: str = friend_messages[-1].get("message")  # type: ignore
-
                             last_message: str = (
                                 f"{last_message[:10]}..."
                                 if len(last_message) > 10
                                 else last_message
                             )
+
                             client_socket.send(
                                 f"{friend}: {last_message}".encode()
                             )
                             assert client_socket.recv(16).decode() == "OK"
 
-
                 case "SEND_MESSAGE":
-                    continue
+                    receiver = client_socket.recv(50).decode()
+                    if receiver is None or receiver == "":
+                        client_socket.send("BAD_REQUEST".encode())
+                        continue
+
+                    friends_list: list[str] = current_user.get("friends")  # type: ignore
+                    if receiver not in friends_list:
+                        client_socket.send("ERROR_USER_NOT_FRIEND".encode())
+                        continue
+
+                    client_socket.send("OK".encode())
+                    message = client_socket.recv(1024).decode()
+
+                    messages = db.table("messages")
+                    messages.insert(
+                        dict(
+                            time=str(time.time_ns()),
+                            sender=current_user.get("login"),
+                            receiver=receiver,
+                            message=message,
+                        )
+                    )
+
+                    client_socket.send("OK".encode())
 
                 case "ADD_FRIEND":
                     continue
