@@ -12,18 +12,14 @@ with TinyDB("database.json") as db:
         dict(
             login="david",
             password="david",
-            ip="",
-            port=0,
             is_logged_in=False,
-            friends=["alice"],
+            friends=["alice", "bob"],
         )
     )
     users.insert(
         dict(
             login="alice",
             password="alice",
-            ip="",
-            port=0,
             is_logged_in=False,
             friends=["david"],
         )
@@ -32,8 +28,6 @@ with TinyDB("database.json") as db:
         dict(
             login="bob",
             password="bob",
-            ip="",
-            port=0,
             is_logged_in=False,
             friends=["david", "alice"],
         )
@@ -45,7 +39,7 @@ with TinyDB("database.json") as db:
             time=str(time.time_ns()),
             sender="david",
             receiver="alice",
-            message="Hello from david",
+            message="Hello what's up?",
         )
     )
     messages.insert(
@@ -53,23 +47,15 @@ with TinyDB("database.json") as db:
             time=str(time.time_ns()),
             sender="alice",
             receiver="david",
-            message="Hi from alice",
+            message="Hi good how are you",
         )
     )
     messages.insert(
         dict(
             time=str(time.time_ns()),
-            sender="alice",
+            sender="bob",
             receiver="david",
-            message="What's up?",
-        )
-    )
-    messages.insert(
-        dict(
-            time=str(time.time_ns()),
-            sender="david",
-            receiver="alice",
-            message="Not much",
+            message="How are you doing mate? I'm fine",
         )
     )
 

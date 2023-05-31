@@ -36,9 +36,8 @@ def handle_client(
     client_socket.send("OK".encode())
     print("[%] Found user:", str(current_user.get("login")))  # type: ignore
 
-    client_ip, client_port = address
     users.update(
-        dict(ip=client_ip, port=client_port, is_logged_in=True),
+        dict(is_logged_in=True),
         user_filter,
     )
 
@@ -167,14 +166,10 @@ def handle_client(
                             sender=current_user.get("login"),
                             receiver=receiver.get("login"),
                             message=message,
-                            read=False,
                         )
                     )
 
                     client_socket.send("OK".encode())
-
-                case "ADD_FRIEND":
-                    continue
 
                 case _:
                     continue
