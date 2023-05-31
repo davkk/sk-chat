@@ -28,10 +28,18 @@ void check_ok(char *answer, int client) {
 }
 
 int main(int args, char *argv[]) {
-    // todo: zabezpieczyć nie podanie argumentow
-
-    int port = atoi(argv[2]);
-    string ip_addr = argv[1];
+    int port;
+    string ip_addr;
+    if (args == 1) {
+        port = 4200;
+        ip_addr = "127.0.0.1";
+    } else if (args != 3) {
+        printf("Podaj dwa argumenty: adres IP i port.\n");
+        exit(1);
+    } else {
+        port = atoi(argv[2]);
+        ip_addr = argv[1];
+    }
     char answer[500] = {0};  // na odbierane wiadomości
 
     //  tworzenie gniazda
@@ -81,9 +89,10 @@ int main(int args, char *argv[]) {
     read_answer(answer, sock);
     check_ok(answer, sock);
 
-    int choice;  // TODO: jakiś enum moze
     char new_friend_login[50], friend_login[50];
     char message[500] = {0};  // na wysyłane wiadomości
+
+    int choice = 0;  // TODO: jakiś enum moze
 
     do {
         printf(
@@ -91,11 +100,9 @@ int main(int args, char *argv[]) {
             "1 - wyświetlić listę znajomych\n"
             "2 - wyświetlić wiadomości od znajomego\n"
             "3 - wysłać wiadomość\n"
-            "4 - wylogować się\n"
-            "> ");
-
-        // todo - sprawdzić czy to liczba
+            "4 - wylogować się\n");
         do {
+            printf("> ");
             cin >> choice;
         } while (choice > 4 || choice < 1);
 
