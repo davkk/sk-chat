@@ -8,12 +8,12 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+
 using namespace std;
 
 void read_answer(char *answer, int client) {
     if (read(client, answer, 1024) < 0) {
-        cout << "Zamykam połączenie."
-             << "\n";
+        printf("Zamykam połączenie.\n");
         close(client);
         exit(1);
     }
@@ -65,20 +65,22 @@ int main(int args, char *argv[]) {
     }
 
     // logowanie
-    char login[50], password[50];
+    char login[50];
+    char password[50];
+
     bool login_succesful = 0;
 
     // podanie loginu i hasła
-    cout << "Podaj login: ";
-    cin >> login;
+    printf("Podaj login: ");
+    scanf("%s", login);
 
     //  wysłanie loginu, odbior info zwrotego i potwierdzenie okejności
     send(sock, login, strlen(login), 0);
     read_answer(answer, sock);
     check_ok(answer, sock);
 
-    cout << "Podaj hasło: ";
-    cin >> password;
+    printf("Podaj hasło: ");
+    scanf("%s", password);
 
     // wysłanie hasła i potwierdzenie
     send(sock, password, strlen(password), 0);
@@ -89,8 +91,8 @@ int main(int args, char *argv[]) {
     read_answer(answer, sock);
     check_ok(answer, sock);
 
-    char new_friend_login[50], friend_login[50];
-    char message[500] = {0};  // na wysyłane wiadomości
+    char new_friend_login[50];
+    char friend_login[50];
 
     int choice = 0;  // TODO: jakiś enum moze
 
@@ -103,7 +105,7 @@ int main(int args, char *argv[]) {
             "4 - wylogować się\n");
         do {
             printf("> ");
-            cin >> choice;
+            scanf("%d", &choice);
         } while (choice > 4 || choice < 1);
 
         switch (choice) {
@@ -130,7 +132,7 @@ int main(int args, char *argv[]) {
                 printf(
                     "Podaj znajomego, ktorego wiadomości chesz zobaczyć:\n"
                     "> ");
-                cin >> friend_login;
+                scanf("%s", friend_login);
                 send(sock, friend_login, strlen(friend_login), 0);
                 read_answer(answer, sock);
 
@@ -139,6 +141,7 @@ int main(int args, char *argv[]) {
                     bzero(answer, sizeof(answer));
                     break;
                 }
+
                 char num_messages[50];
                 read_answer(num_messages, sock);
                 send(sock, "OK", strlen("OK"), 0);
@@ -161,7 +164,7 @@ int main(int args, char *argv[]) {
                     "> ");
 
                 char friend_login[50];
-                cin >> friend_login;
+                scanf("%s", friend_login);
 
                 send(sock, friend_login, strlen(friend_login), 0);
                 read_answer(answer, sock);
@@ -175,14 +178,13 @@ int main(int args, char *argv[]) {
                     "Podaj wiadomość:\n"
                     "> ");
 
-                char message[1024];
-                cin >> message;
+                string message;
+                while (message.empty()) getline(cin, message, '\n');
 
-                send(sock, message, strlen(message), 0);
+                send(sock, message.c_str(), message.length(), 0);
                 read_answer(answer, sock);
                 if (strcmp("OK", answer) != 0) {
                     fprintf(stderr, "Błąd: %s\n", answer);
-                    printf("Nie wysyłaj pustych wiadomości :(\n");
                     bzero(answer, sizeof(answer));
                 }
 
